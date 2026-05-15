@@ -9,10 +9,23 @@ const path = require('path');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+
+/** OxaPay return_url / callback_url base. Custom domain wins; on Render, ignores localhost APP_PUBLIC_URL. */
+function resolvePublicUrl(port) {
+  const explicit = (process.env.APP_PUBLIC_URL || '').trim().replace(/\/+$/, '');
+  const renderUrl = (process.env.RENDER_EXTERNAL_URL || '').trim().replace(/\/+$/, '');
+  const isLocal =
+    explicit && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(explicit);
+  if (explicit && !isLocal) return explicit;
+  if (renderUrl) return renderUrl;
+  if (explicit) return explicit;
+  return `http://localhost:${port}`;
+}
+
 const LICENSE_BASE = (process.env.LICENSE_SERVER_BASE || '').replace(/\/+$/, '');
 const UPDATE_TOKEN = process.env.UPDATE_FEE_API_TOKEN || '';
 const OXAPAY_KEY = process.env.OXAPAY_MERCHANT_API_KEY || '';
-const PUBLIC_URL = (process.env.APP_PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
+const PUBLIC_URL = resolvePublicUrl(PORT);
 const DATA_FILE = path.join(__dirname, 'data', 'orders.json');
 
 /** Server-side poll for OxaPay confirmation if the user closes the tab (ms). Default 35s, min 15s. */
