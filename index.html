@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Extension update fee</title>
+    <meta name="description" content="Extension update fee — verify, pay $9, activate." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Quicksand:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <main class="wrap">
+      <div class="shell reveal shell--tight">
+        <header class="hero">
+          <div class="hero__text">
+            <h1 class="title-only">Extension update fee</h1>
+            <p class="hero__tagline">
+              Enter your old license · verify · <strong>activate now</strong>
+            </p>
+          </div>
+          <div class="hero__meta">
+            <div class="pill"><span>Fee</span><b>$9 USD</b></div>
+          </div>
+        </header>
+
+        <section id="mainCard" class="card card--tight" aria-label="Pay update fee">
+          <div id="panelVerify">
+            <label class="label-min" for="license">
+              License
+              <input
+                id="license"
+                class="mono"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+              />
+            </label>
+            <div id="alert" class="alert" role="status" aria-live="polite"></div>
+            <div class="row row--tight">
+              <button id="btnVerify" class="btn btn--loadable" type="button" aria-busy="false">
+                <span class="btn__spinner" aria-hidden="true"></span>
+                <span class="btn__text">Verify</span>
+              </button>
+              <button id="btnReset" class="btn ghost" type="button" style="display: none">Edit</button>
+            </div>
+          </div>
+
+          <div id="panelPay" style="display: none">
+            <div class="pay-row">
+              <div class="pay-row__cta">
+                <div class="pay-row__stack">
+                  <button id="btnPay" class="btn btn--loadable" type="button" aria-busy="false">
+                    <span class="btn__spinner" aria-hidden="true"></span>
+                    <span class="btn__text">Pay $9</span>
+                  </button>
+                  <a
+                    id="btnHowToPay"
+                    class="btn btn--how-pay"
+                    href="https://youtu.be/QICMRmET7vY?si=quPD9KNt-_KVFCPa"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="How to pay — opens the tutorial video on YouTube"
+                  >
+                    <svg class="btn__yt-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path
+                        fill="currentColor"
+                        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                      />
+                    </svg>
+                    How to pay
+                  </a>
+                </div>
+              </div>
+              <aside class="pay-info-box" aria-label="About this fee">
+                <p class="pay-info-box__text">
+                  This update was heavy on our side (features and infrastructure). The <strong>$9</strong> fee covers
+                  it — your license activates instantly after payment.
+                </p>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal modal--tight">
+        <h2 id="modalTitle">License found</h2>
+        <p id="modalText">Continue.</p>
+        <div class="row">
+          <button id="modalContinue" class="btn" type="button">Continue</button>
+          <button id="modalClose" class="btn ghost" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/project-labels.js"></script>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

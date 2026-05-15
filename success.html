@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payment status</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Quicksand:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <main class="wrap">
+      <div class="shell reveal shell--wide">
+        <header class="top top--minimal">
+          <div class="brand">
+            <h1>Payment receipt</h1>
+            <p id="subtitle" class="success-muted">Confirming your payment and activating your license…</p>
+          </div>
+          <div class="pill"><span>Order</span><b id="orderPill" class="mono">—</b></div>
+        </header>
+
+        <section class="card">
+          <div id="stateLoading" style="display: grid; gap: 14px; align-items: center">
+            <div class="row" style="align-items: center">
+              <div class="success-spin" aria-hidden="true"></div>
+              <div class="success-muted" style="line-height: 1.55">
+                Blockchain confirmations can take a minute. This page will update automatically.
+              </div>
+            </div>
+            <button id="btnSync" class="btn ghost" type="button">Refresh status</button>
+          </div>
+
+          <div id="stateSuccess" style="display: none">
+            <div class="row" style="margin-bottom: 12px">
+              <div class="success-badge" id="badgePaid">Payment successful</div>
+            </div>
+            <p class="success-muted" style="margin: 0 0 14px; line-height: 1.6">
+              Your license is active — you can use it now.
+            </p>
+            <div class="success-receipt" aria-label="Receipt details">
+              <div class="success-kv"><span>License</span><b id="rLicense" class="mono">—</b></div>
+              <div class="success-kv"><span>Version</span><b id="rProject">—</b></div>
+              <div class="success-kv"><span>Amount</span><b>$9 USD</b></div>
+              <div class="success-kv"><span>Activation</span><b id="rCode" class="mono">—</b></div>
+            </div>
+            <div class="row" style="margin-top: 14px">
+              <a class="btn" href="/">Back to home</a>
+            </div>
+          </div>
+
+          <div id="stateWait" style="display: none; margin-top: 12px">
+            <p class="success-muted" style="margin: 0; line-height: 1.6">
+              Payment not confirmed yet. You can keep this tab open, or press refresh after you finish paying.
+            </p>
+            <div class="row" style="margin-top: 12px">
+              <button id="btnSync2" class="btn" type="button">Refresh status</button>
+              <a class="btn ghost" href="/">Home</a>
+            </div>
+          </div>
+
+          <div id="stateErr" class="alert" style="display: none; margin-top: 12px"></div>
+        </section>
+
+        <p class="footer-note">If this page doesn’t update, wait for confirmations and press refresh.</p>
+      </div>
+    </main>
+
+    <script src="/project-labels.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const order = params.get('order') || '';
+
+      const elSubtitle = document.getElementById('subtitle');
+      const elOrderPill = document.getElementById('orderPill');
+      const elLoading = document.getElementById('stateLoading');
+      const elSuccess = document.getElementById('stateSuccess');
+      const elWait = document.getElementById('stateWait');
+      const elErr = document.getElementById('stateErr');
+      const rLicense = document.getElementById('rLicense');
+      const rProject = document.getElementById('rProject');
+      const rCode = document.getElementById('rCode');
+
+      elOrderPill.textContent = order ? order.slice(0, 10) + '…' : '—';
+
+      function showErr(msg) {
+        elErr.style.display = 'block';
+        elErr.textContent = msg;
+        elLoading.style.display = 'none';
+        elSuccess.style.display = 'none';
+        elWait.style.display = 'none';
+      }
+
+      function showSuccess(data) {
+        elLoading.style.display = 'none';
+        elWait.style.display = 'none';
+        elErr.style.display = 'none';
+        elSuccess.style.display = 'block';
+        elSubtitle.textContent = 'All set — your update fee is complete.';
+        rLicense.textContent = data.license_mask || '—';
+        rProject.textContent =
+          typeof window.projectLabel === 'function' ? window.projectLabel(data.project_type) : data.project_type || '—';
+        rCode.textContent = data.activationCode || 'ACTIVATED';
+      }
+
+      function showWait() {
+        elLoading.style.display = 'none';
+        elSuccess.style.display = 'none';
+        elErr.style.display = 'none';
+        elWait.style.display = 'block';
+        elSubtitle.textContent = 'Waiting for payment confirmation…';
+      }
+
+      async function syncServer() {
+        if (!order) {
+          showErr('Missing order reference. Please return from the payment page or start again from home.');
+          return;
+        }
+        await fetch('/api/sync-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: order }),
+        }).catch(() => null);
+      }
+
+      async function pollOnce() {
+        if (!order) return;
+        const r = await fetch('/api/order-status?order=' + encodeURIComponent(order), { cache: 'no-store' });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          if (r.status === 404) showErr('Order not found. If you just paid, wait a moment and refresh.');
+          else showErr('Could not read status. Please try refresh.');
+          return;
+        }
+        if (data.licenseActivated) {
+          showSuccess(data);
+          return true;
+        }
+        if (data.oxapayPaid) {
+          elErr.style.display = 'none';
+          elWait.style.display = 'none';
+          elSuccess.style.display = 'none';
+          elLoading.style.display = 'grid';
+          elSubtitle.textContent = 'Payment received. Activating your license…';
+          return false;
+        }
+        showWait();
+        return false;
+      }
+
+      async function tick() {
+        await syncServer();
+        const done = await pollOnce();
+        return done;
+      }
+
+      document.getElementById('btnSync').addEventListener('click', tick);
+      document.getElementById('btnSync2').addEventListener('click', tick);
+
+      (async () => {
+        if (!order) {
+          showErr('Missing order reference.');
+          return;
+        }
+        let tries = 0;
+        const done = await tick();
+        if (done) return;
+        const t = setInterval(async () => {
+          tries += 1;
+          const ok = await tick();
+          if (ok || tries > 80) clearInterval(t);
+        }, 2500);
+      })();
+    </script>
+  </body>
+</html>
